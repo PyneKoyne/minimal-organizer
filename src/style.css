@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+html {
+    font-size: 16px;
+    /* Use Roboto as a sans-serif (Material guideline) */
+    font-family: 'Roboto', sans-serif;
+    /* Slightly softer dark background than pure black for better contrast */
+    background-color: #000000;
+    color: #ECEFF1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
