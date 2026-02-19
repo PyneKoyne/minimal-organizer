@@ -40,13 +40,28 @@ function App() {
 
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
 
-        //TODO: only trigger this if there are unsaved changes, otherwise it's really annoying
-        //#############
-        console.log("SOME CODE HERE");
-        //#############
-        e.preventDefault();
+        localStorage.setItem("data", JSON.stringify(data))
+        console.log('Saved JSON data to localStorage:', data);
+
+        console.log(e.target)
+
+        // e.preventDefault(); Would stop user
         return "Anything here as well, doesn't matter!";
     };
+
+    useEffect(() => {
+        const temp: string | null = localStorage.getItem("data")
+        if (temp) {
+            try {
+                const jsonData = JSON.parse(temp) as CardItem[];
+                setData(jsonData)
+                console.log('Loaded JSON data from localStorage:', jsonData);
+            }
+            catch (error) {
+                console.error('Error parsing JSON from localStorage:', error);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         window.addEventListener("beforeunload", onBeforeUnload);
@@ -54,8 +69,7 @@ function App() {
         return () => {
             window.removeEventListener("beforeunload", onBeforeUnload);
         };
-        // changeNumCards(1)
-    }, []);
+    }, [onBeforeUnload]);
 
     useEffect(() => {
         // Add the event listener when the component mounts
@@ -210,6 +224,14 @@ function App() {
                         </div>
                     </form>
                     <button onClick={() => saveContext()} className="inline-block mx-2 my-6 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-900 hover:ring-2 hover:ring-green-200 text-slate-900 dark:text-white">Export</button>
+                </div>
+                <div className="fixed left-6 top-0 flex align-middle items-center">
+                    <button onClick={() => setData([{
+                        title: "A Stupid Drone",
+                        tech: "Javascript, React, Tailwind",
+                        comments: "- Hi\n- This is a comment\n- And another one",
+                        caption: "A ESP32 drone that is really stupid and can't do anything, but it's still pretty cool"
+                    }])} className="inline-block mx-2 my-6 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-900 hover:ring-2 hover:ring-green-200 text-slate-900 dark:text-white">Clear</button>
                 </div>
             </div>
         </>

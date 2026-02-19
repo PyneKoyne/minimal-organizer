@@ -79,13 +79,19 @@ const Card = ({id, current, data, setData}: CardData) => {
     useEffect(() => {
         if (!edit) {
             const new_data: CardItem[] = [...data]
-            new_data[id] = {
-                title: title,
-                tech: tech,
-                comments: comments,
-                caption: caption
+            if (title.trim().length === 0) {
+                new_data.splice(id, 1)
+                setData(new_data)
             }
-            setData(new_data)
+            else {
+                new_data[id] = {
+                    title: title,
+                    tech: tech,
+                    comments: comments,
+                    caption: caption
+                }
+                setData(new_data)
+            }
         }
     }, [edit])
 
