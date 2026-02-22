@@ -76,10 +76,11 @@ const reducer = (state: Map<string, CardItem[]>, action: DataReducer): Map<strin
         case "BOOT":
             return action.project ? action.project : new Map<string, CardItem[]>([["workspace", [BASE_CARD]]]);
 
-        case "ADD_WORKSPACE":
+        case "ADD_WORKSPACE": {
             const newState = new Map(state);
             newState.set(action.workspaceIndex ? action.workspaceIndex : "workspace", action.workspace ? action.workspace : [BASE_CARD]);
             return newState;
+        }
 
         case "CLEAR":
             if (action.workspaceIndex) {
@@ -116,13 +117,13 @@ function replacer(_key: string, value: Map<string, CardItem[]>) {
     }
 }
 
-function reviver(_key: string, value: any) {
+function reviver(_key: string, value: any): Map<string, CardItem[]> {
     if(typeof value === 'object' && value !== null) {
         if (value.dataType === 'Map') {
             return new Map(value.value);
         }
     }
-    return value;
+    return new Map([["workspace", [BASE_CARD]]]);
 }
 
 
@@ -137,36 +138,14 @@ function App() {
         caption: "A ESP32 drone that is really stupid and can't do anything, but it's still pretty cool"
     }]]]));
     const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState<boolean>(false);
-    let workspaceNames = Array.from(data.keys())
+    const workspaceNames = Array.from(data.keys())
     const updateXarrow = useXarrow();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-        console.log('Global key press:', event.key);
-        // You can check for specific keys, e.g., for accessibility shortcuts
-        if (event.key === 'Shift') {
-            setShiftPressed(true)
-        }
-        if (!shiftPressed && event.key === 'Enter') {
-            changeCurrentCard(-1)
-        }
-    };
 
     const handleKeyUp = useCallback((event: KeyboardEvent) => {
         if (event.key === 'Shift') {
             setShiftPressed(false)
         }
     }, []);
-
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-
-        localStorage.setItem("data", JSON.stringify(data, replacer))
-        console.log('Saved JSON data to localStorage:', data);
-
-        console.log(e.target)
-
-        // e.preventDefault(); Would stop user
-        return "Anything here as well, doesn't matter!";
-    };
 
     useEffect(() => {
         const temp: string | null = localStorage.getItem("data")
@@ -184,14 +163,36 @@ function App() {
     }, []);
 
     useEffect(() => {
+        const onBeforeUnload = (e: BeforeUnloadEvent) => {
+
+            localStorage.setItem("data", JSON.stringify(data, replacer))
+            console.log('Saved JSON data to localStorage:', data);
+
+            console.log(e.target)
+
+            // e.preventDefault(); Would stop user
+            return "Anything here as well, doesn't matter!";
+        };
+
         window.addEventListener("beforeunload", onBeforeUnload);
 
         return () => {
             window.removeEventListener("beforeunload", onBeforeUnload);
         };
-    }, [onBeforeUnload]);
+    }, [data]);
 
     useEffect(() => {
+        const  handleKeyDown = (event: KeyboardEvent) => {
+            console.log('Global key press:', event.key);
+            // You can check for specific keys, e.g., for accessibility shortcuts
+            if (event.key === 'Shift') {
+                setShiftPressed(true)
+            }
+            if (!shiftPressed && event.key === 'Enter') {
+                changeCurrentCard(-1)
+            }
+        };
+
         // Add the event listener when the component mounts
         document.addEventListener('keydown', handleKeyDown as EventListener);
 
@@ -199,7 +200,7 @@ function App() {
         return () => {
             document.removeEventListener('keydown', handleKeyDown as EventListener);
         };
-    }, [handleKeyDown]); // Re-run effect if handleKeyDown changes
+    }, [shiftPressed]); // Re-run effect if handleKeyDown changes
 
     useEffect(() => {
         // Add the event listener when the component mounts
@@ -274,7 +275,7 @@ function App() {
             // Also schedule another update on next animation frame to ensure DOM is painted
             // and the arrow library can measure elements correctly.
             requestAnimationFrame(() => {
-                try { updateXarrow(); } catch (e) { /* swallow */ }
+                try { updateXarrow(); } catch (e ) { console.warn('updateXarrow failed on animation frame', e); }
             });
         } catch (e) {
             // swallow if updateXarrow isn't ready yet
@@ -299,7 +300,7 @@ function App() {
                     <form method="post" encType="multipart/form-data">
                         <div className="flex">
                             <label htmlFor="json_upload"
-                                   className="mx-2 my-6 inline-block px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-900 hover:ring-2 hover:ring-green-200 text-slate-900 dark:text-white">Upload</label>
+                                   className="mx-2 my-6 inline-block px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-900 hover:ring-2 hover:ring-green-200 text-slate-900 dark:text-white cursor-pointer">Upload</label>
                             <input type="file" id="json_upload" name="json_upload" accept=".txt" onChange={(e) => uploadFile(e)}
                                    className="size-0 opacity-0"/>
                         </div>
@@ -332,7 +333,7 @@ function App() {
                                             changeCurrentWorkspace(Array.from(data.keys())[0]);
                                         }
                                     }
-                                }} className="material-symbols-outlined text-slate-300 hover:text-indigo-400"><span>delete</span></button>
+                                }} className="material-symbols-outlined text-slate-300 hover:text-indigo-400 cursor-pointer"><span>delete</span></button>
                                 <h2 className="text-md font-semibold text-slate-300">{index}</h2>
                                 <span className="material-symbols-outlined text-slate-300">chevron_right</span>
                             </div>
