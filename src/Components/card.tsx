@@ -1,5 +1,4 @@
 import {useEffect} from 'react'
-import type { Dispatch, SetStateAction } from 'react'
 
 // Define the shape of a single card item
 interface CardItem {
@@ -14,10 +13,11 @@ interface CardData {
     id: number;
     current: number | null;
     data: CardItem[];
-    setData: Dispatch<SetStateAction<CardItem[]>>;
+    setData: (newData: CardItem) => void;
+    deleteCard: (id: number) => void;
 }
 
-const Card = ({id, current, data, setData}: CardData) => {
+const Card = ({id, current, data, setData, deleteCard}: CardData) => {
     const title:string = data[id].title
     const tech:string = data[id].tech
     const comments:string = data[id].comments
@@ -25,72 +25,45 @@ const Card = ({id, current, data, setData}: CardData) => {
     const edit:boolean = current == id
 
     const changeTitle = (newTitle: string) => {
-        setData((prevData: CardItem[]) => {
-            const new_data: CardItem[] = [...prevData]
-            new_data[id] = {
+        setData({
                 title: newTitle,
                 tech: tech,
                 comments: comments,
                 caption: caption
-            }
-            return new_data
-        })
+            })
     }
 
     const changeTech = (newTech: string) => {
-        setData((prevData: CardItem[]) => {
-            const new_data: CardItem[] = [...prevData]
-            new_data[id] = {
+        setData({
                 title: title,
                 tech: newTech,
                 comments: comments,
                 caption: caption
-            }
-            return new_data
-        })
+            })
     }
 
     const changeComments = (newComments: string) => {
-        setData((prevData: CardItem[]) => {
-            const new_data: CardItem[] = [...prevData]
-            new_data[id] = {
+        setData({
                 title: title,
                 tech: tech,
                 comments: newComments,
                 caption: caption
-            }
-            return new_data
-        })
+            })
     }
 
     const changeCaption = (newCaption: string) => {
-        setData((prevData: CardItem[]) => {
-            const new_data: CardItem[] = [...prevData]
-            new_data[id] = {
+        setData({
                 title: title,
                 tech: tech,
                 comments: comments,
                 caption: newCaption
-            }
-            return new_data
-        })
+            })
     }
 
     useEffect(() => {
         if (!edit) {
-            const new_data: CardItem[] = [...data]
             if (title.trim().length === 0) {
-                new_data.splice(id, 1)
-                setData(new_data)
-            }
-            else {
-                new_data[id] = {
-                    title: title,
-                    tech: tech,
-                    comments: comments,
-                    caption: caption
-                }
-                setData(new_data)
+                deleteCard(id)
             }
         }
     }, [edit])
@@ -117,7 +90,7 @@ const Card = ({id, current, data, setData}: CardData) => {
                         : <pre className="leading-7 w-full max-w-70 sm:max-w-75 md:max-w-90 whitespace-pre-wrap wrap-break-word my-2 text-sm text-gray-200 dark:text-gray-100">{comments.trim()}</pre>
                     }
 
-                    <hr className="my-4 border-gray-700"/>
+                    {(caption.length > 0 || edit) && <hr className="my-4 border-gray-700"/>}
                     {edit ? <textarea cols={20} rows={3} value={caption} onChange={e => changeCaption(e.target.value.replaceAll("\n", ""))}
                                       style={{width: '100%'}}
                                       className="w-full max-w-70 sm:min-w-75 md:min-w-95 wrap-break-word whitespace-pre-wrap my-2 block resize-none p-3 rounded-md border border-gray-700 bg-slate-800/60 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow duration-150 ease-in-out dark:text-white text-sm sm:text-sm md:text-sm leading-6"/>
