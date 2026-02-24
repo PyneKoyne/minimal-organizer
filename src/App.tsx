@@ -117,13 +117,13 @@ function replacer(_key: string, value: Map<string, CardItem[]>) {
     }
 }
 
-function reviver(_key: string, value: any): Map<string, CardItem[]> {
+function reviver(_key: string, value: any): any {
     if(typeof value === 'object' && value !== null) {
         if (value.dataType === 'Map') {
             return new Map(value.value);
         }
     }
-    return new Map([["workspace", [BASE_CARD]]]);
+    return value;
 }
 
 
@@ -152,7 +152,6 @@ function App() {
         if (temp) {
             try {
                 const jsonData = JSON.parse(temp, reviver) as Map<string, CardItem[]>;
-                if(!jsonData.values()) return;
                 dispatch({ type: "BOOT", project: jsonData })
                 console.log('Loaded JSON data from localStorage:', jsonData);
             }
