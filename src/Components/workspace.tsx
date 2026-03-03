@@ -1,61 +1,62 @@
 import Xarrow, { Xwrapper } from "react-xarrows"
 import Card from "./card.tsx";
+import type {CardItem, WorkspaceProps} from "../types.tsx";
+import {DataContext, WorkspaceContext} from "../ContextProvider.tsx";
+import {useContext} from "react";
+import {RenamingStatus} from "../constants.tsx";
 
-// Reuse CardItem type shape from Card component
-interface CardItem {
-    title: string
-    tech: string
-    comments: string
-    caption: string
+const BASE_CARD: CardItem = {
+    title: "Fried and Fried Again",
+    tech: "Javascript, React, Tailwind",
+    comments: "- Hi\n- This is a comment\n- And another one",
+    caption: "This is a caption"
 }
 
-interface DataReducer {
-    type: "UPDATE" | "ADD_CARD" | "DELETE_CARD" | "LOAD" | "ADD_WORKSPACE" | "CLEAR" | "BOOT" | "DELETE_WORKSPACE";
-    workspaceIndex?: string;
-    id?: number;
-    card?: CardItem;
-    workspace?: CardItem[];
-    project?: Map<string, CardItem[]>;
-}
 
-interface WorkspaceProps {
-    changeCurrentCard: (index: number) => void;
-    data: Map<string, CardItem[]>;
-    currentWorkspace: string;
-    dispatch: (action: DataReducer) => void;
-    currentCard: number;
-}
-
-const Workspace = ({changeCurrentCard, data, currentWorkspace, dispatch, currentCard}: WorkspaceProps) => {
+const Workspace = ({currentCard, changeCurrentCard}: WorkspaceProps) => {
+    const {workspaceData, dispatch} = useContext(DataContext)!;
+    const {renaming, setRenaming, tempName, setTempName} = useContext(WorkspaceContext)!;
+    const workspaceProperties = workspaceData.head;
+    const workspaceIndex = workspaceData.index;
+    const data = workspaceData.values;
+    const currentWorkspace = workspaceProperties[workspaceIndex].key;
     const currentWorkspaceData = data.get(currentWorkspace);
+    const showTitle = workspaceProperties[workspaceIndex].title;
 
     const createNewCard = () => {
         if (currentWorkspaceData) {
             changeCurrentCard(currentWorkspaceData.length)
-            dispatch({ type: "ADD_CARD", workspaceIndex: currentWorkspace, card: {
-                    title: "A Stupid Drone",
-                    tech: "Javascript, React, Tailwind",
-                    comments: "- Hi\n- This is a comment\n- And another one",
-                    caption: "A ESP32 drone that is really stupid and can't do anything, but it's still pretty cool"
-                }
+            dispatch({ type: "ADD_CARD", workspaceIndex: workspaceIndex, card: BASE_CARD
             })
             console.log("Creating new card")
         }
     }
 
     const setData = (newCard: CardItem) => {
-        dispatch({ type: "UPDATE", workspaceIndex: currentWorkspace, id: currentCard, card: newCard })
+        dispatch({ type: "UPDATE", workspaceIndex: workspaceIndex, id: currentCard, card: newCard })
     }
 
     const deleteCard = (id: number) => {
-        dispatch({ type: "DELETE_CARD", workspaceIndex: currentWorkspace, id: id})
+        dispatch({ type: "DELETE_CARD", workspaceIndex: workspaceIndex, id: id})
     }
 
     if (!currentWorkspaceData) return null;
 
     return (
-        <div className="min-h-screen min-w-full flex items-center justify-start p-25">
-
+        <div className="min-h-screen flex items-center p-25 justify-start">
+            <div className="title_container">
+            {showTitle ? ( (renaming === RenamingStatus.WorkspaceRenaming) ?
+                    <input autoFocus defaultValue={tempName} onChange={(e) => {
+                        const newName = e.target.value;
+                        setTempName(newName)
+                    }} className="fixed top-1/12 right-1/2 translate-x-1/2 mb-36 mt-12 text-8xl font-bold text-slate-300 bg-transparent border-b border-slate-300 focus:outline-none focus:border-indigo-400"/>
+                    : <h1 onDoubleClick={() => {
+                    setRenaming(RenamingStatus.WorkspaceRenaming);
+                    setTempName(currentWorkspace)
+                }} className="fixed top-1/12 right-1/2 translate-x-1/2  mb-36 mt-12 text-8xl font-bold text-slate-300">{(renaming !== RenamingStatus.NotRenaming) ? tempName : currentWorkspace}</h1>
+                ) : <h1 className="fixed top-1/12 right-1/2 translate-x-1/2 mb-36 mt-12 text-8xl font-bold text-slate-300 opacity-0"> </h1>}
+            </div>
+            <div className="min-w-full flex items-center justify-start">
             <Xwrapper>
                 {currentWorkspaceData.map((_item: CardItem, index: number) => {
                     return (
@@ -64,7 +65,6 @@ const Workspace = ({changeCurrentCard, data, currentWorkspace, dispatch, current
                                  className="rounded-xl relative hover:ring-2 hover:ring-green-200 mx-10">
                                 <Card key={index} id={index} current={currentCard} data={currentWorkspaceData} setData={setData} deleteCard={deleteCard}/>
                             </div>
-
                             {/* Render an arrow after each card except the last one */}
                             {index < currentWorkspaceData.length - 1 && (
                                 <Xarrow
@@ -94,6 +94,7 @@ const Workspace = ({changeCurrentCard, data, currentWorkspace, dispatch, current
 
                 <div id={"card" + currentWorkspaceData.length.toString()} className="relative left-15 min-lg"/>
             </Xwrapper>
+            </div>
         </div>
     )
 }

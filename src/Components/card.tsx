@@ -1,28 +1,12 @@
 import {useEffect} from 'react'
-
-// Define the shape of a single card item
-interface CardItem {
-    title: string
-    tech: string
-    comments: string
-    caption: string
-}
-
-// Define the props for the Card component
-interface CardData {
-    id: number;
-    current: number | null;
-    data: CardItem[];
-    setData: (newData: CardItem) => void;
-    deleteCard: (id: number) => void;
-}
+import type {CardData} from "../types.tsx";
 
 const Card = ({id, current, data, setData, deleteCard}: CardData) => {
-    const title:string = data[id].title
-    const tech:string = data[id].tech
-    const comments:string = data[id].comments
-    const caption:string = data[id].caption
-    const edit:boolean = current == id
+    const title: string = data[id].title
+    const tech: string = data[id].tech
+    const comments: string = data[id].comments
+    const caption: string = data[id].caption
+    const edit: boolean = current === id;
 
     const changeTitle = (newTitle: string) => {
         setData({
@@ -66,7 +50,7 @@ const Card = ({id, current, data, setData, deleteCard}: CardData) => {
                 deleteCard(id)
             }
         }
-    }, [edit])
+    }, [edit, title, deleteCard, id])
 
     return (
         <>
